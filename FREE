@@ -1,0 +1,227 @@
+-- Load Orion Library
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+
+-- Variables
+local autoClickEnabled = false
+local fastClickEnabled = false
+local autoClaimEnabled = false
+local autoCollectEnabled = false
+local antiAfkEnabled = false
+local autoHatchEggEnabled = false
+
+-- Function to handle normal clicking
+local function autoClick()
+    while autoClickEnabled do
+        pcall(function()
+            game:GetService("ReplicatedStorage").Events.Click:FireServer()
+        end)
+        wait(1) -- Normal click interval
+    end
+end
+
+-- Function to handle fast clicking
+local function fastClick()
+    while fastClickEnabled do
+        pcall(function()
+            game:GetService("ReplicatedStorage").Events.Click:FireServer()
+        end)
+        wait(0.5) -- Faster interval
+    end
+end
+
+-- Function to handle auto claim gifts
+local function autoClaimGifts()
+    while autoClaimEnabled do
+        for i = 1, 9 do
+            pcall(function()
+                game:GetService("ReplicatedStorage").Events["Claim" .. tostring(i)]:FireServer()
+            end)
+        end
+        wait(5) -- Repeat every 5 seconds
+    end
+end
+
+-- Function to handle auto collect gifts
+local function autoCollectGifts()
+    while autoCollectEnabled do
+        for i = 1, 59 do
+            pcall(function()
+                game:GetService("ReplicatedStorage").Events.CollectSnowflake:FireServer(i)
+            end)
+        end
+        wait(5) -- Repeat every 5 seconds
+    end
+end
+
+-- Function for anti-AFK
+local function antiAfk()
+    while antiAfkEnabled do
+        pcall(function()
+            local vu = game:GetService("VirtualUser")
+            vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            wait(1)
+            vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+        end)
+        wait(30) -- Interval for anti-AFK actions
+    end
+end
+
+-- Function to hatch eggs
+local function autoHatchEgg(args)
+    while autoHatchEggEnabled do
+        pcall(function()
+            game:GetService("ReplicatedStorage").Functions.Hatch:InvokeServer(unpack(args))
+        end)
+        wait(0.5)
+    end
+end
+
+-- GUI Setup
+local Window = OrionLib:MakeWindow({Name = "Clicking Master", HidePremium = false, SaveConfig = true, ConfigFolder = "GameAutomation"})
+
+-- Auto Click Tab
+local ClickTab = Window:MakeTab({
+    Name = "Auto Click",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+ClickTab:AddToggle({
+    Name = "Normal Auto Click",
+    Default = false,
+    Callback = function(value)
+        autoClickEnabled = value
+        if autoClickEnabled then
+            coroutine.wrap(autoClick)()
+        end
+    end
+})
+
+ClickTab:AddToggle({
+    Name = "Fast Auto Click",
+    Default = false,
+    Callback = function(value)
+        fastClickEnabled = value
+        if fastClickEnabled then
+            coroutine.wrap(fastClick)()
+        end
+    end
+})
+
+-- Auto Claim Gifts Tab
+local GiftTab = Window:MakeTab({
+    Name = "Auto Gifts",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+GiftTab:AddToggle({
+    Name = "Auto Hatch Exclusive Egg",
+    Default = false,
+    Callback = function(value)
+        autoClaimEnabled = value
+        if autoClaimEnabled then
+            coroutine.wrap(autoClaimGifts)()
+        end
+    end
+})
+
+GiftTab:AddToggle({
+    Name = "Auto Collect Gifts",
+    Default = false,
+    Callback = function(value)
+        autoCollectEnabled = value
+        if autoCollectEnabled then
+            coroutine.wrap(autoCollectGifts)()
+        end
+    end
+})
+
+-- Auto Hatch Eggs Tab
+local HatchTab = Window:MakeTab({
+    Name = "Auto Hatch Eggs",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+HatchTab:AddSection({Name = "Event Eggs"})
+
+HatchTab:AddToggle({
+    Name = "Snowman Egg",
+    Default = false,
+    Callback = function(value)
+        autoHatchEggEnabled = value
+        if autoHatchEggEnabled then
+            coroutine.wrap(function()
+                autoHatchEgg({[1] = "Snowman", [2] = "Triple"})
+            end)()
+        end
+    end
+})
+
+HatchTab:AddToggle({
+    Name = "Christmas Tree Egg",
+    Default = false,
+    Callback = function(value)
+        autoHatchEggEnabled = value
+        if autoHatchEggEnabled then
+            coroutine.wrap(function()
+                autoHatchEgg({[1] = "Christmas Tree", [2] = "Triple"})
+            end)()
+        end
+    end
+})
+
+HatchTab:AddSection({Name = "Normal Eggs"})
+
+local eggs = {
+    "Basic", "Forest", "Desert", "Atlantis", "Winter", 
+    "Volcano", "Nuclear", "Cyber", "Magic"
+}
+
+for _, eggName in pairs(eggs) do
+    HatchTab:AddToggle({
+        Name = eggName .. " Egg",
+        Default = false,
+        Callback = function(value)
+            autoHatchEggEnabled = value
+            if autoHatchEggEnabled then
+                coroutine.wrap(function()
+                    autoHatchEgg({[1] = eggName, [2] = "Triple"})
+                end)()
+            end
+        end
+    })
+end
+
+-- Misc Tab
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MiscTab:AddToggle({
+    Name = "Anti AFK",
+    Default = false,
+    Callback = function(value)
+        antiAfkEnabled = value
+        if antiAfkEnabled then
+            OrionLib:MakeNotification({
+                Name = "Anti AFK Enabled",
+                Content = "Anti AFK is now working.",
+                Time = 5
+            })
+            coroutine.wrap(antiAfk)()
+        else
+            OrionLib:MakeNotification({
+                Name = "Anti AFK Disabled",
+                Content = "Anti AFK has been turned off.",
+                Time = 5
+            })
+        end
+    end
+})
+
+-- Initialize GUI
+OrionLib:Init()
